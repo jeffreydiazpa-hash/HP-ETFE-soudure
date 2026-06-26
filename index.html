@@ -247,8 +247,8 @@
 </div>
 
 <script>
-// ⚠️ Remplace cette URL par celle de TON déploiement Web App GAS (terminant par /exec)
-const API_URL = "https://script.google.com/macros/s/XXXXXXXX_TON_DEPLOIEMENT/exec";
+// URL du déploiement Web App GAS (terminant par /exec)
+const API_URL = "https://script.google.com/macros/s/AKfycbypgjEjWn9nMxFFQIuBDHPVXjND-paV70MLoNf1U0TULfaIzLnR29sGWUnq9hPefVad/exec";
 
 let lastReco = null;
 
@@ -280,7 +280,11 @@ async function calculer(){
   };
 
   try{
-    const res = await fetch(API_URL,{method:"POST",body:JSON.stringify(req)});
+    const res = await fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(req)
+    });
     const j = await res.json();
     if(!j.ok) throw new Error(j.error||"erreur serveur");
     lastReco = j.data;
@@ -372,7 +376,11 @@ async function enregistrer(){
     causeNOK:val('causeNOK'), forceRupture:val('forceRupture'), observations:val('observations')
   };
   try{
-    const res=await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
+    const res=await fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(body)
+    });
     const j=await res.json();
     if(!j.ok) throw new Error(j.error||"erreur");
     msg.innerHTML='<div class="warn" style="background:#dcf0dc;border-color:'+'#2A7A2A;color:#1c1c1c"><b>✓ Soudure enregistrée</b> (ligne '+j.data.ligne+'). Merci, la base est enrichie.</div>';
