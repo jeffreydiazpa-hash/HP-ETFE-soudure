@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HP Soudure ETFE — Assistant paramètres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rouge:#CC2222; --anthracite:#1C1C1C; --gris-fonce:#3A3A3A;
+    --gris-moyen:#7A7A7A; --blanc-casse:#F2F0ED; --blanc:#FFFFFF;
+    --vert:#2A7A2A;
+    --r:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'DM Sans',system-ui,sans-serif;color:var(--anthracite);
+    background:var(--blanc-casse);line-height:1.6;padding-bottom:60px;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 16px}
+
+  /* En-tête */
+  header{background:var(--blanc);border-bottom:3px solid var(--rouge);padding:18px 0;margin-bottom:24px}
+  .logo{display:flex;align-items:baseline;gap:8px}
+  .logo .hp{background:var(--rouge);color:#fff;font-weight:700;padding:3px 9px;border-radius:5px;font-size:18px;letter-spacing:-.02em}
+  .logo .pt{color:var(--gris-fonce);font-weight:400;font-size:18px}
+  .logo .sub{color:var(--gris-moyen);font-size:11px;margin-left:2px}
+  h1{font-size:21px;font-weight:700;letter-spacing:-.015em;margin-top:10px}
+  .ref{font-family:'DM Mono',monospace;color:var(--rouge);font-size:12px;margin-top:2px}
+
+  /* Cartes */
+  .card{background:var(--blanc);border-radius:var(--r);padding:20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  h2{font-size:15px;font-weight:700;border-left:3px solid var(--rouge);padding-left:9px;margin-bottom:16px}
+
+  /* Formulaire */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  label{display:block;font-size:12px;font-weight:500;color:var(--gris-fonce);margin-bottom:5px}
+  input,select{
+    width:100%;padding:12px;border:1.5px solid #ddd;border-radius:8px;
+    font-family:inherit;font-size:15px;background:#fff;color:var(--anthracite);
+  }
+  input:focus,select:focus{outline:none;border-color:var(--rouge)}
+  .opt{font-weight:400;color:var(--gris-moyen);font-style:italic}
+
+  /* Bouton */
+  .btn{
+    width:100%;background:var(--rouge);color:#fff;border:none;border-radius:8px;
+    padding:15px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;
+    margin-top:6px;transition:opacity .15s;
+  }
+  .btn:hover{opacity:.9}
+  .btn:disabled{opacity:.5;cursor:wait}
+  .btn-sec{background:var(--anthracite)}
+  .btn-ok{background:var(--vert)}
+
+  /* Résultat */
+  #resultat{display:none}
+  .param-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+  @media(max-width:560px){.param-grid{grid-template-columns:1fr}}
+  .param{background:var(--blanc-casse);border-radius:8px;padding:12px}
+  .param .k{font-size:11px;color:var(--gris-moyen);text-transform:uppercase;letter-spacing:.03em}
+  .param .v{font-size:20px;font-weight:700;font-family:'DM Mono',monospace}
+  .param .v.muted{color:var(--gris-moyen);font-size:15px;font-weight:400}
+
+  /* Badge confiance */
+  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700}
+  .badge.eleve{background:#dcf0dc;color:var(--vert)}
+  .badge.moyen{background:#fff3c4;color:#8a6d00}
+  .badge.faible{background:#fbe0de;color:var(--rouge)}
+
+  /* Bandeau avertissement compensation */
+  .warn{
+    background:#fff8e6;border:1.5px solid #f0c000;border-left:4px solid #f0c000;
+    border-radius:8px;padding:14px;margin:14px 0;font-size:13px;
+  }
+  .warn b{color:#8a6d00}
+
+  /* Analyse IA */
+  .ia{background:#f7f7fb;border-radius:8px;padding:16px;margin-top:14px;font-size:14px;white-space:pre-wrap}
+  .ia h3{font-size:13px;color:var(--gris-moyen);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+
+  /* Sources */
+  details{margin-top:12px}
+  summary{cursor:pointer;font-size:13px;color:var(--gris-fonce);font-weight:500}
+  .src-tbl{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+  .src-tbl th,.src-tbl td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+  .src-tbl th{color:var(--gris-moyen);font-weight:500}
+  .ok-pill{color:var(--vert);font-weight:700}
+
+  .muted{color:var(--gris-moyen);font-size:13px}
+  .err{background:#fbe0de;border-left:4px solid var(--rouge);padding:12px;border-radius:8px;color:var(--rouge);font-size:14px}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-3px;margin-right:6px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  footer{text-align:center;color:var(--gris-moyen);font-size:10px;margin-top:30px}
+
+  /* Onglets */
+  .tabs{display:flex;gap:4px;margin-bottom:18px}
+  .tab{flex:1;padding:11px;text-align:center;background:var(--blanc);border:none;border-radius:8px;
+       font-family:inherit;font-size:14px;font-weight:500;color:var(--gris-moyen);cursor:pointer}
+  .tab.active{background:var(--anthracite);color:#fff}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo"><span class="hp">High</span><span class="pt">Point</span><span class="sub">Architectures Textiles</span></div>
+    <h1>Assistant paramètres de soudure ETFE</h1>
+    <div class="ref">HP-SOUDURE-ETFE</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('calc')">Calculer une soudure</button>
+    <button class="tab" onclick="showTab('hist')">Historique</button>
+  </div>
+
+  <!-- ====== ONGLET CALCUL ====== -->
+  <div id="tab-calc">
+    <div class="card">
+      <h2>Conditions de la soudure</h2>
+      <div class="grid">
+        <div>
+          <label>Type de soudure</label>
+          <select id="typeSoudure">
+            <option>Recouvrement simple</option>
+            <option>Recouvrement avec BA</option>
+            <option>Pocket à cheval (Keder)</option>
+            <option>Backstrip</option>
+            <option>Overlap</option>
+            <option>Kederpocket</option>
+          </select>
+        </div>
+        <div>
+          <label>Épaisseur / grammage (µm)</label>
+          <input id="epaisseur" type="number" inputmode="numeric" placeholder="ex. 250">
+        </div>
+        <div>
+          <label>Fabricant du film</label>
+          <select id="fabricant">
+            <option>Nowofol</option><option>AGC</option><option>PATI</option>
+            <option>Asahi</option><option>St. Gobain</option><option>Autre</option>
+          </select>
+        </div>
+        <div>
+          <label>N° de rouleau <span class="opt">(traçabilité)</span></label>
+          <input id="rouleau" type="text" placeholder="ex. 158">
+        </div>
+        <div>
+          <label>Machine</label>
+          <select id="machine"><option value="1">Machine 1</option><option value="2">Machine 2</option></select>
+        </div>
+        <div>
+          <label>Opérateur</label>
+          <input id="operateur" type="text" placeholder="votre nom">
+        </div>
+        <div>
+          <label>Projet</label>
+          <input id="projet" type="text" placeholder="ex. Data Center Paris">
+        </div>
+        <div></div>
+        <div>
+          <label>T° ambiante atelier (°C)</label>
+          <input id="tAmbiante" type="number" inputmode="numeric" placeholder="ex. 12">
+        </div>
+        <div>
+          <label>Humidité (%)</label>
+          <input id="humidite" type="number" inputmode="numeric" placeholder="ex. 70">
+        </div>
+        <div>
+          <label>T° poutre froide (°C) <span class="opt">(optionnel — thermo IR)</span></label>
+          <input id="tPoutreFroide" type="number" inputmode="numeric" placeholder="laisser vide si non mesuré">
+        </div>
+      </div>
+      <button class="btn" id="btnCalc" onclick="calculer()">Calculer les paramètres recommandés</button>
+      <div id="erreur"></div>
+    </div>
+
+    <!-- Résultat -->
+    <div class="card" id="resultat">
+      <h2>Paramètres recommandés</h2>
+      <div style="margin-bottom:6px">
+        Niveau de confiance : <span id="badge" class="badge"></span>
+        <span class="muted" id="nbcas"></span>
+      </div>
+
+      <div id="warnComp"></div>
+
+      <div class="param-grid" id="params"></div>
+
+      <div class="ia">
+        <h3>Analyse de l'assistant</h3>
+        <div id="iaText"></div>
+      </div>
+
+      <details>
+        <summary>Voir les essais réels utilisés comme référence</summary>
+        <div id="sources"></div>
+      </details>
+
+      <div style="margin-top:18px;border-top:1px solid #eee;padding-top:16px">
+        <h2>Enregistrer cette soudure</h2>
+        <p class="muted" style="margin-bottom:12px">Après avoir soudé, notez le résultat réel. C'est ce qui fait progresser l'assistant.</p>
+        <div class="grid">
+          <div>
+            <label>Résultat</label>
+            <select id="resultatReel"><option value="">—</option><option>OK</option><option>moyen</option><option>NOK</option></select>
+          </div>
+          <div>
+            <label>Cause si NOK <span class="opt">(pelage, bulles, délaminage…)</span></label>
+            <input id="causeNOK" type="text">
+          </div>
+          <div>
+            <label>Paramètres réellement utilisés <span class="opt">(si différents)</span></label>
+            <input id="paramReels" type="text" placeholder="ex. soudure 312°C, vitesse 1,0">
+          </div>
+          <div>
+            <label>Force de rupture (MPa) <span class="opt">(si testée)</span></label>
+            <input id="forceRupture" type="number" step="0.1">
+          </div>
+        </div>
+        <label style="margin-top:12px">Observations</label>
+        <input id="observations" type="text">
+        <button class="btn btn-ok" id="btnLog" onclick="enregistrer()">Enregistrer dans l'historique</button>
+        <div id="logMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== ONGLET HISTORIQUE ====== -->
+  <div id="tab-hist" style="display:none">
+    <div class="card">
+      <h2>Historique des soudures</h2>
+      <button class="btn btn-sec" onclick="chargerHistorique()">Rafraîchir</button>
+      <div id="histContent" style="margin-top:14px"><p class="muted">Cliquez sur Rafraîchir pour charger.</p></div>
+    </div>
+  </div>
+
+  <footer>
+    High Point Structures — 17 rue Robert Geffré, 17000 La Rochelle — Assistant interne soudure ETFE<br>
+    Les recommandations s'appuient sur les essais réels enregistrés. L'opérateur garde la décision finale.
+  </footer>
+</div>
+
+<script>
+// ⚠️ Remplace cette URL par celle de TON déploiement Web App GAS (terminant par /exec)
+const API_URL = "https://script.google.com/macros/s/XXXXXXXX_TON_DEPLOIEMENT/exec";
+
+let lastReco = null;
+
+function showTab(t){
+  document.getElementById('tab-calc').style.display = t==='calc'?'block':'none';
+  document.getElementById('tab-hist').style.display = t==='hist'?'block':'none';
+  document.querySelectorAll('.tab').forEach((b,i)=>{
+    b.classList.toggle('active', (t==='calc'&&i===0)||(t==='hist'&&i===1));
+  });
+}
+
+function val(id){ return document.getElementById(id).value.trim(); }
+
+async function calculer(){
+  const err = document.getElementById('erreur'); err.innerHTML="";
+  if(!val('epaisseur')||!val('typeSoudure')){
+    err.innerHTML='<div class="err">Renseignez au moins le type de soudure et l\'épaisseur.</div>';
+    return;
+  }
+  const btn=document.getElementById('btnCalc');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Analyse en cours…';
+
+  const req = {
+    action:"recommend",
+    typeSoudure:val('typeSoudure'), epaisseur:val('epaisseur'),
+    fabricant:val('fabricant'), rouleau:val('rouleau'), machine:val('machine'),
+    operateur:val('operateur'), projet:val('projet'),
+    tAmbiante:val('tAmbiante'), humidite:val('humidite'), tPoutreFroide:val('tPoutreFroide')
+  };
+
+  try{
+    const res = await fetch(API_URL,{method:"POST",body:JSON.stringify(req)});
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error||"erreur serveur");
+    lastReco = j.data;
+    afficher(j.data);
+  }catch(e){
+    err.innerHTML='<div class="err">Erreur : '+e.message+'</div>';
+  }finally{
+    btn.disabled=false; btn.textContent="Calculer les paramètres recommandés";
+  }
+}
+
+function fmt(v){ return (v==null||v==="")?'<span class="muted">—</span>':v; }
+
+function afficher(d){
+  document.getElementById('resultat').style.display='block';
+  // badge confiance
+  const b=document.getElementById('badge');
+  const c=(d.confiance||"faible");
+  b.textContent=c.toUpperCase();
+  b.className='badge '+(c==='élevé'?'eleve':c==='moyen'?'moyen':'faible');
+  document.getElementById('nbcas').textContent=
+    ' — '+(d.nbCasProches||0)+' cas proches sur '+(d.nbCasSimilaires||0)+' similaires';
+
+  // bandeau compensation (affiché tant que théorique non validée)
+  const wc=document.getElementById('warnComp'); wc.innerHTML="";
+  const comp=d.compensation||{};
+  if(comp.statut==="théorique non validée" && (comp.deltaSoudure||(comp.notes&&comp.notes.length))){
+    let notes=(comp.notes||[]).map(n=>'• '+n).join('<br>');
+    wc.innerHTML='<div class="warn"><b>⚠️ Compensation thermique théorique</b><br>'+
+      'Les ajustements liés à la température de l\'atelier sont basés sur la norme DIN, '+
+      '<b>pas encore validés par vos essais réels</b>. Faites un cordon test avant production et ajustez si besoin. '+
+      'Chaque soudure enregistrée affine ce calcul.<br><br>'+notes+'</div>';
+  }
+
+  // paramètres
+  const p=d.parametresRecommandes||{};
+  const g=document.getElementById('params');
+  const cards=[
+    ['T° chauffe (h/b)', tdeg(p.tChauffeHaut,p.tChauffeBas)],
+    ['T° soudure (h/b)', tdeg(p.tSoudureHaut,p.tSoudureBas)],
+    ['Vitesse', p.vitesse!=null?p.vitesse+' m/min':null],
+    ['P. soudure', p.pSoudure!=null?p.pSoudure+' bar':null],
+    ['P. chauffe', p.pChauffe!=null?p.pChauffe+' bar':null],
+    ['P. refroid.', p.pRefroid!=null?p.pRefroid+' bar':null],
+    ['P. bobine avant', p.pBobineAvant!=null?p.pBobineAvant+' bar':null],
+    ['P. bobine arrière', p.pBobineArr!=null?p.pBobineArr+' bar':null],
+  ];
+  g.innerHTML=cards.map(([k,v])=>
+    '<div class="param"><div class="k">'+k+'</div><div class="v'+(v==null?' muted':'')+'">'+(v==null?'—':v)+'</div></div>'
+  ).join('');
+
+  // analyse IA
+  document.getElementById('iaText').textContent=d.analyseIA||"(indisponible)";
+
+  // sources
+  const s=d.sources||[];
+  let html='<table class="src-tbl"><tr><th>Date</th><th>Projet</th><th>Épais.</th><th>Type</th><th>Résultat</th><th>Force</th></tr>';
+  s.forEach(x=>{
+    const dt=x.date?new Date(x.date).toLocaleDateString('fr-FR'):'—';
+    const r=x.resultat==='OK'?'<span class="ok-pill">OK</span>':(x.resultat||'—');
+    html+='<tr><td>'+dt+'</td><td>'+(x.projet||'—')+'</td><td>'+x.epaisseur+'µm</td><td>'+(x.type||'')+'</td><td>'+r+'</td><td>'+(x.force||'—')+'</td></tr>';
+  });
+  html+='</table>';
+  document.getElementById('sources').innerHTML = s.length?html:'<p class="muted">Aucun cas similaire trouvé.</p>';
+
+  document.getElementById('resultat').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function tdeg(h,b){
+  if(h==null&&b==null) return null;
+  if(h===b) return h+'°C';
+  return (h==null?'-':h)+' / '+(b==null?'-':b)+'°C';
+}
+
+async function enregistrer(){
+  if(!lastReco) return;
+  const msg=document.getElementById('logMsg'); msg.innerHTML="";
+  const btn=document.getElementById('btnLog');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Enregistrement…';
+
+  const body={
+    action:"logSoudure",
+    operateur:val('operateur'), projet:val('projet'),
+    epaisseur:val('epaisseur'), fabricant:val('fabricant'), rouleau:val('rouleau'),
+    typeSoudure:val('typeSoudure'), machine:val('machine'),
+    tAmbiante:val('tAmbiante'), humidite:val('humidite'), tPoutreFroide:val('tPoutreFroide'),
+    reco:lastReco,
+    paramReels:val('paramReels'), resultat:val('resultatReel'),
+    causeNOK:val('causeNOK'), forceRupture:val('forceRupture'), observations:val('observations')
+  };
+  try{
+    const res=await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
+    const j=await res.json();
+    if(!j.ok) throw new Error(j.error||"erreur");
+    msg.innerHTML='<div class="warn" style="background:#dcf0dc;border-color:'+'#2A7A2A;color:#1c1c1c"><b>✓ Soudure enregistrée</b> (ligne '+j.data.ligne+'). Merci, la base est enrichie.</div>';
+  }catch(e){
+    msg.innerHTML='<div class="err">Erreur : '+e.message+'</div>';
+  }finally{
+    btn.disabled=false; btn.textContent="Enregistrer dans l'historique";
+  }
+}
+
+async function chargerHistorique(){
+  const c=document.getElementById('histContent');
+  c.innerHTML='<p class="muted"><span class="spin" style="border-color:#999;border-top-color:transparent"></span>Chargement…</p>';
+  try{
+    const res=await fetch(API_URL+"?action=getHistory");
+    const j=await res.json();
+    if(!j.ok) throw new Error(j.error);
+    const h=j.data||[];
+    if(!h.length){ c.innerHTML='<p class="muted">Aucune soudure enregistrée pour l\'instant.</p>'; return; }
+    let html='<table class="src-tbl"><tr><th>Date</th><th>Projet</th><th>Épais.</th><th>Type</th><th>T°amb</th><th>Confiance</th><th>Résultat</th></tr>';
+    h.reverse().forEach(r=>{
+      const dt=r['Horodatage']?new Date(r['Horodatage']).toLocaleString('fr-FR'):'—';
+      const res=r['Résultat']==='OK'?'<span class="ok-pill">OK</span>':(r['Résultat']||'—');
+      html+='<tr><td>'+dt+'</td><td>'+(r['Projet']||'—')+'</td><td>'+(r['Épaisseur (µm)']||'')+'</td><td>'+(r['Type soudure']||'')+'</td><td>'+(r['T° ambiante (°C)']||'')+'</td><td>'+(r['Niveau confiance']||'')+'</td><td>'+res+'</td></tr>';
+    });
+    html+='</table>';
+    c.innerHTML=html;
+  }catch(e){
+    c.innerHTML='<div class="err">Erreur : '+e.message+'</div>';
+  }
+}
+</script>
+</body>
+</html>
