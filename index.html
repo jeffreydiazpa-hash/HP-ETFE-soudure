@@ -59,10 +59,23 @@
   #resultat{display:none}
   .param-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
   @media(max-width:560px){.param-grid{grid-template-columns:1fr}}
-  .param{background:var(--blanc-casse);border-radius:8px;padding:12px}
-  .param .k{font-size:11px;color:var(--gris-moyen);text-transform:uppercase;letter-spacing:.03em}
-  .param .v{font-size:20px;font-weight:700;font-family:'DM Mono',monospace}
-  .param .v.muted{color:var(--gris-moyen);font-size:15px;font-weight:400}
+  .param{background:var(--blanc-casse);border-radius:8px;padding:10px 12px}
+  .param .k{font-size:11px;color:var(--gris-moyen);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px}
+  .param-edit{display:flex;align-items:baseline;gap:6px}
+  .param-edit input{
+    width:90px;padding:6px 8px;border:1.5px solid #ddd;border-radius:6px;
+    font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--anthracite);background:#fff;
+  }
+  .param-edit input:focus{outline:none;border-color:var(--rouge)}
+  .param-edit .unit{font-size:13px;color:var(--gris-moyen)}
+  .param-edit input.changed{border-color:var(--rouge);background:#fff8f8}
+  .param .orig{font-size:10px;color:var(--gris-moyen);margin-top:3px;min-height:12px}
+  .noinfo{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gris-moyen);margin-top:6px;cursor:pointer;font-weight:400}
+  .noinfo input{width:auto;margin:0}
+  .edit-note{
+    background:var(--blanc-casse);border-left:3px solid var(--anthracite);
+    border-radius:6px;padding:11px 13px;font-size:13px;margin:16px 0 4px;
+  }
 
   /* Badge confiance */
   .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700}
@@ -77,9 +90,14 @@
   }
   .warn b{color:#8a6d00}
 
-  /* Analyse IA */
-  .ia{background:#f7f7fb;border-radius:8px;padding:16px;margin-top:14px;font-size:14px;white-space:pre-wrap}
-  .ia h3{font-size:13px;color:var(--gris-moyen);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+  /* Bloc analyse IA — redesigné */
+  .ia-block{border:1px solid #e5e3df;border-radius:12px;overflow:hidden;margin:16px 0;background:#fff}
+  .ia-head{display:flex;align-items:center;gap:8px;padding:11px 16px;background:linear-gradient(to right,#1C1C1C,#2a2a2a)}
+  .ia-dot{width:8px;height:8px;border-radius:50%;background:var(--rouge);box-shadow:0 0 0 3px rgba(204,34,34,.25)}
+  .ia-title{color:#fff;font-weight:700;font-size:14px}
+  .ia-tag{margin-left:auto;font-size:10px;color:#bbb;text-transform:uppercase;letter-spacing:.05em;border:1px solid #444;border-radius:20px;padding:2px 9px}
+  .ia-body{padding:16px;font-size:14px;line-height:1.65;white-space:pre-wrap}
+  .ia-body strong,.ia-body b{color:var(--anthracite)}
 
   /* Sources */
   details{margin-top:12px}
@@ -125,6 +143,47 @@
       <h2>Conditions de la soudure</h2>
       <div class="grid">
         <div>
+          <label>Date & heure <span class="opt">(auto — modifiable)</span></label>
+          <input id="dateHeure" type="datetime-local">
+        </div>
+        <div>
+          <label>Projet</label>
+          <input id="projet" type="text" placeholder="ex. Serre JFV">
+        </div>
+        <div>
+          <label>Machine</label>
+          <select id="machine"><option value="1">Machine 1</option><option value="2">Machine 2</option></select>
+        </div>
+        <div>
+          <label>Soudeur(euse)</label>
+          <input id="operateur" type="text" placeholder="votre nom">
+        </div>
+        <div>
+          <label>Contrôleur(euse)</label>
+          <input id="controleur" type="text" placeholder="nom du contrôleur">
+        </div>
+        <div>
+          <label>Fabricant du film</label>
+          <select id="fabricant">
+            <option>Nowofol</option><option>AGC</option><option>PATI</option>
+            <option>Asahi</option><option>St. Gobain</option><option>Autre</option>
+          </select>
+        </div>
+        <div>
+          <label>Matière</label>
+          <input id="matiere" type="text" value="ETFE">
+        </div>
+        <div>
+          <label>Composition par couche (µm)</label>
+          <input id="composition" type="text" inputmode="text" placeholder="ex. 2x250  ou  350/150/250  ou  300+2x250" oninput="majTotal()">
+          <div id="totalGram" class="muted" style="margin-top:5px"></div>
+          <input id="epaisseur" type="hidden">
+        </div>
+        <div>
+          <label>N° de rouleau <span class="opt">(traçabilité)</span></label>
+          <input id="rouleau" type="text" placeholder="ex. 158">
+        </div>
+        <div>
           <label>Type de soudure</label>
           <select id="typeSoudure">
             <option>Recouvrement simple</option>
@@ -136,42 +195,12 @@
           </select>
         </div>
         <div>
-          <label>Composition par couche (µm)</label>
-          <input id="composition" type="text" inputmode="text" placeholder="ex. 250+250  ou  350/150/250  ou  300+2x250" oninput="majTotal()">
-          <div id="totalGram" class="muted" style="margin-top:5px"></div>
-          <input id="epaisseur" type="hidden">
-        </div>
-        <div>
-          <label>Fabricant du film</label>
-          <select id="fabricant">
-            <option>Nowofol</option><option>AGC</option><option>PATI</option>
-            <option>Asahi</option><option>St. Gobain</option><option>Autre</option>
-          </select>
-        </div>
-        <div>
-          <label>N° de rouleau <span class="opt">(traçabilité)</span></label>
-          <input id="rouleau" type="text" placeholder="ex. 158">
-        </div>
-        <div>
-          <label>Machine</label>
-          <select id="machine"><option value="1">Machine 1</option><option value="2">Machine 2</option></select>
-        </div>
-        <div>
-          <label>Opérateur</label>
-          <input id="operateur" type="text" placeholder="votre nom">
-        </div>
-        <div>
-          <label>Projet</label>
-          <input id="projet" type="text" placeholder="ex. Data Center Paris">
-        </div>
-        <div></div>
-        <div>
           <label>T° ambiante atelier (°C)</label>
-          <input id="tAmbiante" type="number" inputmode="numeric" placeholder="ex. 12">
+          <input id="tAmbiante" type="number" inputmode="numeric" placeholder="ex. 22">
         </div>
         <div>
           <label>Humidité (%)</label>
-          <input id="humidite" type="number" inputmode="numeric" placeholder="ex. 70">
+          <input id="humidite" type="number" inputmode="numeric" placeholder="ex. 63">
         </div>
         <div>
           <label>T° poutre froide (°C) <span class="opt">(optionnel — thermo IR)</span></label>
@@ -186,18 +215,21 @@
     <div class="card" id="resultat">
       <h2>Paramètres recommandés</h2>
       <div id="warnLimite"></div>
-      <div style="margin-bottom:6px">
-        Niveau de confiance : <span id="badge" class="badge"></span>
+      <div style="margin-bottom:14px">
+        Niveau de confiance <span class="muted" style="font-size:11px">(selon l'analyse de l'assistant)</span> : <span id="badge" class="badge"></span>
         <span class="muted" id="nbcas"></span>
       </div>
 
       <div id="warnComp"></div>
 
-      <div class="param-grid" id="params"></div>
-
-      <div class="ia">
-        <h3>Analyse de l'assistant</h3>
-        <div id="iaText"></div>
+      <!-- Bloc analyse IA — redesigné -->
+      <div class="ia-block">
+        <div class="ia-head">
+          <span class="ia-dot"></span>
+          <span class="ia-title">Analyse de l'assistant</span>
+          <span class="ia-tag">basé sur vos essais réels</span>
+        </div>
+        <div class="ia-body" id="iaText"></div>
       </div>
 
       <details>
@@ -205,9 +237,15 @@
         <div id="sources"></div>
       </details>
 
+      <!-- Paramètres éditables -->
+      <div class="edit-note">
+        <b>Vous gardez le dernier mot.</b> Les valeurs ci-dessous sont un point de départ. Ajustez-les selon votre jugement avant d'enregistrer — c'est ce que vous enregistrez qui fait foi.
+      </div>
+      <div class="param-grid" id="params"></div>
+
       <div style="margin-top:18px;border-top:1px solid #eee;padding-top:16px">
         <h2>Enregistrer cette soudure</h2>
-        <p class="muted" style="margin-bottom:12px">Après avoir soudé, notez le résultat réel. C'est ce qui fait progresser l'assistant.</p>
+        <p class="muted" style="margin-bottom:12px">Notez le résultat réel après soudure. Les paramètres enregistrés sont ceux affichés ci-dessus (vos valeurs ajustées).</p>
         <div class="grid">
           <div>
             <label>Résultat</label>
@@ -218,16 +256,13 @@
             <input id="causeNOK" type="text">
           </div>
           <div>
-            <label>Paramètres réellement utilisés <span class="opt">(si différents)</span></label>
-            <input id="paramReels" type="text" placeholder="ex. soudure 312°C, vitesse 1,0">
-          </div>
-          <div>
             <label>Force de rupture (MPa) <span class="opt">(si testée)</span></label>
             <input id="forceRupture" type="number" step="0.1">
           </div>
+          <div></div>
         </div>
         <label style="margin-top:12px">Observations</label>
-        <input id="observations" type="text">
+        <input id="observations" type="text" placeholder="ex. Pelage OK, Test OK">
         <button class="btn btn-ok" id="btnLog" onclick="enregistrer()">Enregistrer dans l'historique</button>
         <div id="logMsg"></div>
       </div>
@@ -254,6 +289,16 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbypgjEjWn9nMxFFQIuBDHPVXjND-paV70MLoNf1U0TULfaIzLnR29sGWUnq9hPefVad/exec";
 
 let lastReco = null;
+
+// initialise la date/heure courante (modifiable) au format datetime-local
+function initDateHeure(){
+  const el=document.getElementById('dateHeure');
+  if(!el) return;
+  const d=new Date();
+  d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+  el.value=d.toISOString().slice(0,16);
+}
+window.addEventListener('DOMContentLoaded', initDateHeure);
 
 function showTab(t){
   document.getElementById('tab-calc').style.display = t==='calc'?'block':'none';
@@ -373,25 +418,42 @@ function afficher(d){
       'Chaque soudure enregistrée affine ce calcul.<br><br>'+notes+'</div>';
   }
 
-  // paramètres
+  // paramètres ÉDITABLES (l'opérateur a le dernier mot)
+  // ordre et noms conformes à la feuille papier interne
   const p=d.parametresRecommandes||{};
+  window._recoOrig = Object.assign({}, p);
   const g=document.getElementById('params');
-  const cards=[
-    ['T° chauffe (h/b)', tdeg(p.tChauffeHaut,p.tChauffeBas)],
-    ['T° soudure (h/b)', tdeg(p.tSoudureHaut,p.tSoudureBas)],
-    ['Vitesse', p.vitesse!=null?p.vitesse+' m/min':null],
-    ['P. soudure', p.pSoudure!=null?p.pSoudure+' bar':null],
-    ['P. chauffe', p.pChauffe!=null?p.pChauffe+' bar':null],
-    ['P. refroid.', p.pRefroid!=null?p.pRefroid+' bar':null],
-    ['P. bobine avant', p.pBobineAvant!=null?p.pBobineAvant+' bar':null],
-    ['P. bobine arrière', p.pBobineArr!=null?p.pBobineArr+' bar':null],
+  const champs=[
+    ['tChauffeHaut','Température de chauffe haut','°C'],
+    ['tChauffeBas','Température de chauffe bas','°C'],
+    ['tSoudureHaut','Température de soudage haut','°C'],
+    ['tSoudureBas','Température de soudage bas','°C'],
+    ['vitesse','Vitesse d\'avance','m/min'],
+    ['pBobineArr','Pression bobine arrière','bar'],
+    ['pRefroid','Pression barre de refroidissement','bar'],
+    ['pSoudure','Pression barre de soudure','bar'],
+    ['pChauffe','Pression barre de chauffage','bar'],
+    ['pBobineAvant','Pression bobine avant','bar'],
   ];
-  g.innerHTML=cards.map(([k,v])=>
-    '<div class="param"><div class="k">'+k+'</div><div class="v'+(v==null?' muted':'')+'">'+(v==null?'—':v)+'</div></div>'
-  ).join('');
+  g.innerHTML=champs.map(([key,lab,unit])=>{
+    const v=p[key];
+    const vv=(v==null?'':v);
+    const dispo = (v!=null);
+    return '<div class="param">'+
+      '<div class="k">'+lab+'</div>'+
+      '<div class="param-edit">'+
+        '<input type="number" step="0.1" id="ed_'+key+'" value="'+vv+'" '+
+          'oninput="markChanged(\''+key+'\')" '+(dispo?'':'disabled')+'>'+
+        '<span class="unit">'+unit+'</span>'+
+      '</div>'+
+      '<label class="noinfo"><input type="checkbox" id="ni_'+key+'" '+(dispo?'':'checked')+' '+
+        'onchange="toggleNoInfo(\''+key+'\')"> non renseigné</label>'+
+      '<div class="orig" id="or_'+key+'">'+(v==null?'aucune donnée dans la base':'reco IA : '+v+' '+unit)+'</div>'+
+    '</div>';
+  }).join('');
 
   // analyse IA
-  document.getElementById('iaText').textContent=d.analyseIA||"(indisponible)";
+  document.getElementById('iaText').innerHTML = mdLight(d.analyseIA||"(indisponible)");
 
   // sources
   const s=d.sources||[];
@@ -407,10 +469,51 @@ function afficher(d){
   document.getElementById('resultat').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function tdeg(h,b){
-  if(h==null&&b==null) return null;
-  if(h===b) return h+'°C';
-  return (h==null?'-':h)+' / '+(b==null?'-':b)+'°C';
+// coche "non renseigné" : désactive le champ et marque l'absence d'info
+function toggleNoInfo(key){
+  const inp=document.getElementById('ed_'+key);
+  const chk=document.getElementById('ni_'+key);
+  if(chk.checked){
+    inp.value=''; inp.disabled=true; inp.classList.remove('changed');
+  } else {
+    inp.disabled=false; inp.focus();
+  }
+}
+
+// marque visuellement un paramètre modifié par rapport à la reco IA
+function markChanged(key){
+  const inp=document.getElementById('ed_'+key);
+  const orig=window._recoOrig?window._recoOrig[key]:null;
+  const cur=parseFloat(inp.value);
+  if(orig!=null && !isNaN(cur) && cur!==orig){ inp.classList.add('changed'); }
+  else { inp.classList.remove('changed'); }
+}
+
+// lit les paramètres réellement retenus (champs éditables)
+// un champ "non renseigné" (case cochée) est explicitement omis
+function lireParamsReels(){
+  const keys=['tChauffeHaut','tChauffeBas','tSoudureHaut','tSoudureBas','vitesse',
+              'pBobineArr','pRefroid','pSoudure','pChauffe','pBobineAvant'];
+  const o={};
+  keys.forEach(k=>{
+    const chk=document.getElementById('ni_'+k);
+    if(chk && chk.checked) return;            // non renseigné -> on n'envoie rien
+    const el=document.getElementById('ed_'+k);
+    if(el && el.value!=='') o[k]=parseFloat(el.value);
+  });
+  return o;
+}
+
+// mini-formatage markdown léger (gras **x**, titres ##, listes) pour l'analyse IA
+function mdLight(t){
+  if(!t) return "";
+  let h=t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  h=h.replace(/^\s*#{1,6}\s*(.+)$/gm,'<strong>$1</strong>');
+  h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h=h.replace(/^\s*[-•]\s+/gm,'• ');
+  h=h.replace(/^\s*>\s?/gm,'');
+  h=h.replace(/^---+$/gm,'');
+  return h;
 }
 
 async function enregistrer(){
@@ -420,15 +523,19 @@ async function enregistrer(){
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>Enregistrement…';
 
   const {total, couches} = parseComposition(val('composition'));
+  const paramsReels = lireParamsReels();
   const body={
     action:"logSoudure",
-    operateur:val('operateur'), projet:val('projet'),
+    dateHeure:val('dateHeure'),
+    operateur:val('operateur'), controleur:val('controleur'), projet:val('projet'),
+    matiere:val('matiere'),
     epaisseur:total, composition:val('composition'), couches:couches.join(" + "),
     fabricant:val('fabricant'), rouleau:val('rouleau'),
     typeSoudure:val('typeSoudure'), machine:val('machine'),
     tAmbiante:val('tAmbiante'), humidite:val('humidite'), tPoutreFroide:val('tPoutreFroide'),
     reco:lastReco,
-    paramReels:val('paramReels'), resultat:val('resultatReel'),
+    paramsReels: paramsReels,            // valeurs ajustées par l'opérateur
+    resultat:val('resultatReel'),
     causeNOK:val('causeNOK'), forceRupture:val('forceRupture'), observations:val('observations')
   };
   try{
