@@ -136,8 +136,10 @@
           </select>
         </div>
         <div>
-          <label>Épaisseur / grammage (µm)</label>
-          <input id="epaisseur" type="number" inputmode="numeric" placeholder="ex. 250">
+          <label>Composition par couche (µm)</label>
+          <input id="composition" type="text" inputmode="text" placeholder="ex. 250+250  ou  350/150/250  ou  300+2x250" oninput="majTotal()">
+          <div id="totalGram" class="muted" style="margin-top:5px"></div>
+          <input id="epaisseur" type="hidden">
         </div>
         <div>
           <label>Fabricant du film</label>
@@ -183,6 +185,7 @@
     <!-- Résultat -->
     <div class="card" id="resultat">
       <h2>Paramètres recommandés</h2>
+      <div id="warnLimite"></div>
       <div style="margin-bottom:6px">
         Niveau de confiance : <span id="badge" class="badge"></span>
         <span class="muted" id="nbcas"></span>
@@ -262,10 +265,48 @@ function showTab(t){
 
 function val(id){ return document.getElementById(id).value.trim(); }
 
+// Parse une composition type "250+250", "350/150/250", "300+2x250", "2×250"
+// Retourne la somme totale en µm (pocket inclus puisque tout est additionné).
+function parseComposition(txt){
+  if(!txt) return {total:0, couches:[]};
+  // normalise séparateurs : + et / = addition ; x ou × = multiplication
+  const parts = txt.replace(/×/g,'x').split(/[+\/]/).map(s=>s.trim()).filter(Boolean);
+  let total=0; const couches=[];
+  parts.forEach(p=>{
+    const m = p.match(/^(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)$/i); // "2x250"
+    if(m){
+      const n=parseFloat(m[1].replace(',','.')), e=parseFloat(m[2].replace(',','.'));
+      total += n*e; couches.push(n+"×"+e);
+    } else {
+      const v=parseFloat(p.replace(',','.'));
+      if(!isNaN(v)){ total+=v; couches.push(String(v)); }
+    }
+  });
+  return {total:Math.round(total), couches};
+}
+
+const LIMITE_GRAMMAGE = 1600;
+
+function majTotal(){
+  const txt=val('composition');
+  const {total}=parseComposition(txt);
+  document.getElementById('epaisseur').value = total||"";
+  const el=document.getElementById('totalGram');
+  if(!total){ el.innerHTML=""; el.className="muted"; return; }
+  if(total>LIMITE_GRAMMAGE){
+    el.innerHTML='⚠️ <b>Grammage total : '+total+' µm</b> — dépasse la limite machine de '+LIMITE_GRAMMAGE+' µm. Soudure déconseillée.';
+    el.className=""; el.style.color="#CC2222"; el.style.fontWeight="500";
+  } else {
+    el.innerHTML='Grammage total : <b>'+total+' µm</b>';
+    el.className=""; el.style.color="#2A7A2A";
+  }
+}
+
 async function calculer(){
   const err = document.getElementById('erreur'); err.innerHTML="";
-  if(!val('epaisseur')||!val('typeSoudure')){
-    err.innerHTML='<div class="err">Renseignez au moins le type de soudure et l\'épaisseur.</div>';
+  const {total, couches} = parseComposition(val('composition'));
+  if(!total||!val('typeSoudure')){
+    err.innerHTML='<div class="err">Renseignez au moins le type de soudure et la composition (épaisseur des couches).</div>';
     return;
   }
   const btn=document.getElementById('btnCalc');
@@ -273,7 +314,11 @@ async function calculer(){
 
   const req = {
     action:"recommend",
-    typeSoudure:val('typeSoudure'), epaisseur:val('epaisseur'),
+    typeSoudure:val('typeSoudure'),
+    epaisseur:total,                          // total calculé pour la recherche de similarité
+    composition:val('composition'),            // texte brut saisi (traçabilité)
+    couches:couches.join(" + "),               // couches normalisées
+    depasseLimite: total>LIMITE_GRAMMAGE,
     fabricant:val('fabricant'), rouleau:val('rouleau'), machine:val('machine'),
     operateur:val('operateur'), projet:val('projet'),
     tAmbiante:val('tAmbiante'), humidite:val('humidite'), tPoutreFroide:val('tPoutreFroide')
@@ -300,6 +345,15 @@ function fmt(v){ return (v==null||v==="")?'<span class="muted">—</span>':v; }
 
 function afficher(d){
   document.getElementById('resultat').style.display='block';
+
+  // avertissement limite grammage (si dépassée)
+  const wl=document.getElementById('warnLimite'); wl.innerHTML="";
+  if(d.conditions && d.conditions.depasseLimite){
+    wl.innerHTML='<div class="warn" style="background:#fbe0de;border-color:#CC2222;border-left-color:#CC2222">'+
+      '<b style="color:#CC2222">⚠️ Grammage total '+d.conditions.epaisseur+' µm — limite machine '+LIMITE_GRAMMAGE+' µm dépassée</b><br>'+
+      'Cette soudure dépasse la capacité recommandée de la machine. Les paramètres ci-dessous sont donnés à titre indicatif. Procédez avec prudence et test obligatoire.</div>';
+  }
+
   // badge confiance
   const b=document.getElementById('badge');
   const c=(d.confiance||"faible");
@@ -365,10 +419,12 @@ async function enregistrer(){
   const btn=document.getElementById('btnLog');
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>Enregistrement…';
 
+  const {total, couches} = parseComposition(val('composition'));
   const body={
     action:"logSoudure",
     operateur:val('operateur'), projet:val('projet'),
-    epaisseur:val('epaisseur'), fabricant:val('fabricant'), rouleau:val('rouleau'),
+    epaisseur:total, composition:val('composition'), couches:couches.join(" + "),
+    fabricant:val('fabricant'), rouleau:val('rouleau'),
     typeSoudure:val('typeSoudure'), machine:val('machine'),
     tAmbiante:val('tAmbiante'), humidite:val('humidite'), tPoutreFroide:val('tPoutreFroide'),
     reco:lastReco,
