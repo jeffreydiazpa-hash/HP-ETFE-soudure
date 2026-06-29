@@ -216,6 +216,7 @@
     <div class="card" id="resultat">
       <h2>Paramètres recommandés</h2>
       <div id="warnLimite"></div>
+      <div id="warnFusion"></div>
       <div style="margin-bottom:14px">
         Niveau de confiance <span class="muted" style="font-size:11px">(selon l'analyse de l'assistant)</span> : <span id="badge" class="badge"></span>
         <span class="muted" id="nbcas"></span>
@@ -526,8 +527,19 @@ function afficher(d){
   const c=(d.confiance||"faible");
   b.textContent=c.toUpperCase();
   b.className='badge '+(c==='élevé'?'eleve':c==='moyen'?'moyen':'faible');
-  document.getElementById('nbcas').textContent=
-    ' — '+(d.nbCasProches||0)+' cas proches sur '+(d.nbCasSimilaires||0)+' similaires';
+  let nbtxt=' — '+(d.nbCasProches||0)+' cas proches sur '+(d.nbCasSimilaires||0)+' similaires';
+  if(d.parSource){
+    const ps=d.parSource;
+    nbtxt+=' (réel:'+(ps.Soudure_Log||0)+' · essais:'+(ps.HP_Interne||0)+' · seele:'+(ps.Ref_Seele||0)+')';
+  }
+  document.getElementById('nbcas').textContent=nbtxt;
+
+  // alerte garde-fou fenêtre de fusion 270-300°C
+  const wf=document.getElementById('warnFusion'); wf.innerHTML="";
+  if(d.fenetureFusion && d.fenetureFusion.alerte){
+    wf.innerHTML='<div class="warn" style="background:#fbe0de;border-color:#CC2222;border-left-color:#CC2222">'+
+      '<b style="color:#CC2222">⚠️ Hors fenêtre de fusion ETFE</b><br>'+d.fenetureFusion.alerte+'</div>';
+  }
 
   // bandeau compensation (affiché tant que théorique non validée)
   const wc=document.getElementById('warnComp'); wc.innerHTML="";
@@ -579,11 +591,12 @@ function afficher(d){
 
   // sources
   const s=d.sources||[];
-  let html='<table class="src-tbl"><tr><th>Date</th><th>Projet</th><th>Épais.</th><th>Type</th><th>Résultat</th><th>Force</th></tr>';
+  let html='<table class="src-tbl"><tr><th>Source</th><th>Date</th><th>Projet</th><th>Épais.</th><th>Type</th><th>Résultat</th><th>σ (MPa)</th><th>Éc-type</th></tr>';
   s.forEach(x=>{
     const dt=x.date?new Date(x.date).toLocaleDateString('fr-FR'):'—';
     const r=x.resultat==='OK'?'<span class="ok-pill">OK</span>':(x.resultat||'—');
-    html+='<tr><td>'+dt+'</td><td>'+(x.projet||'—')+'</td><td>'+x.epaisseur+'µm</td><td>'+(x.type||'')+'</td><td>'+r+'</td><td>'+(x.force||'—')+'</td></tr>';
+    const srcLabel = x.source==='Soudure_Log'?'<b>réel</b>':x.source==='HP_Interne'?'essai':'seele';
+    html+='<tr><td>'+srcLabel+'</td><td>'+dt+'</td><td>'+(x.projet||'—')+'</td><td>'+(x.epaisseur||'')+'µm</td><td>'+(x.type||'')+'</td><td>'+r+'</td><td>'+(x.contrainte||'—')+'</td><td>'+(x.ecartType!=null?x.ecartType:'—')+'</td></tr>';
   });
   html+='</table>';
   document.getElementById('sources').innerHTML = s.length?html:'<p class="muted">Aucun cas similaire trouvé.</p>';
