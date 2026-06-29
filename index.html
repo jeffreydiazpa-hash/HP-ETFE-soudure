@@ -134,6 +134,7 @@
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('calc')">Calculer une soudure</button>
+    <button class="tab" onclick="showTab('direct')">Saisir un test existant</button>
     <button class="tab" onclick="showTab('hist')">Historique</button>
   </div>
 
@@ -256,16 +257,87 @@
             <input id="causeNOK" type="text">
           </div>
           <div>
-            <label>Force de rupture (MPa) <span class="opt">(si testée)</span></label>
-            <input id="forceRupture" type="number" step="0.1">
+            <label>Contrainte moyenne (MPa) <span class="opt">(5 échantillons)</span></label>
+            <input id="contrainteMoy" type="number" step="0.01">
           </div>
-          <div></div>
+          <div>
+            <label>Contrainte minimale (MPa)</label>
+            <input id="contrainteMin" type="number" step="0.01">
+          </div>
+          <div>
+            <label>Écart-type (MPa) <span class="opt">(régularité)</span></label>
+            <input id="ecartType" type="number" step="0.001">
+          </div>
         </div>
         <label style="margin-top:12px">Observations</label>
         <input id="observations" type="text" placeholder="ex. Pelage OK, Test OK">
         <button class="btn btn-ok" id="btnLog" onclick="enregistrer()">Enregistrer dans l'historique</button>
         <div id="logMsg"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ====== ONGLET SAISIE DIRECTE ====== -->
+  <div id="tab-direct" style="display:none">
+    <div class="card">
+      <h2>Saisir un test déjà réalisé</h2>
+      <p class="muted" style="margin-bottom:16px">Pour archiver un test existant directement dans l'historique, sans analyse de l'assistant. Renseignez les champs connus (laissez vides les autres).</p>
+      <div class="grid">
+        <div><label>Date & heure</label><input id="d_dateHeure" type="datetime-local"></div>
+        <div><label>Projet</label><input id="d_projet" type="text"></div>
+        <div><label>Machine</label><select id="d_machine"><option value="1">Machine 1</option><option value="2">Machine 2</option></select></div>
+        <div><label>Soudeur(euse)</label><input id="d_operateur" type="text"></div>
+        <div><label>Contrôleur(euse)</label><input id="d_controleur" type="text"></div>
+        <div><label>Fabricant</label><select id="d_fabricant"><option>Nowofol</option><option>AGC</option><option>PATI</option><option>Asahi</option><option>St. Gobain</option><option>Autre</option></select></div>
+        <div><label>Matière</label><input id="d_matiere" type="text" value="ETFE"></div>
+        <div>
+          <label>Composition par couche (µm)</label>
+          <input id="d_composition" type="text" placeholder="ex. 2x250" oninput="majTotalD()">
+          <div id="d_totalGram" class="muted" style="margin-top:5px"></div>
+          <input id="d_epaisseur" type="hidden">
+        </div>
+        <div><label>N° de rouleau</label><input id="d_rouleau" type="text"></div>
+        <div>
+          <label>Type de soudure</label>
+          <select id="d_typeSoudure">
+            <option>Recouvrement simple</option><option>Recouvrement avec BA</option>
+            <option>Pocket à cheval (Keder)</option><option>Backstrip</option>
+            <option>Overlap</option><option>Kederpocket</option>
+          </select>
+        </div>
+        <div><label>T° ambiante (°C)</label><input id="d_tAmbiante" type="number"></div>
+        <div><label>Humidité (%)</label><input id="d_humidite" type="number"></div>
+        <div><label>T° poutre froide (°C) <span class="opt">(optionnel)</span></label><input id="d_tPoutreFroide" type="number"></div>
+      </div>
+
+      <h2 style="margin-top:22px">Paramètres de soudure utilisés</h2>
+      <div class="grid">
+        <div><label>Température de chauffe haut (°C)</label><input id="d_tChauffeHaut" type="number"></div>
+        <div><label>Température de chauffe bas (°C)</label><input id="d_tChauffeBas" type="number"></div>
+        <div><label>Température de soudage haut (°C)</label><input id="d_tSoudureHaut" type="number"></div>
+        <div><label>Température de soudage bas (°C)</label><input id="d_tSoudureBas" type="number"></div>
+        <div><label>Vitesse d'avance (m/min)</label><input id="d_vitesse" type="number" step="0.1"></div>
+        <div></div>
+        <div><label>Pression bobine arrière (bar)</label><input id="d_pBobineArr" type="number" step="0.1"></div>
+        <div><label>Pression barre de refroidissement (bar)</label><input id="d_pRefroid" type="number" step="0.1"></div>
+        <div><label>Pression barre de soudure (bar)</label><input id="d_pSoudure" type="number" step="0.1"></div>
+        <div><label>Pression barre de chauffage (bar)</label><input id="d_pChauffe" type="number" step="0.1"></div>
+        <div><label>Pression bobine avant (bar)</label><input id="d_pBobineAvant" type="number" step="0.1"></div>
+      </div>
+
+      <h2 style="margin-top:22px">Résultat & traction</h2>
+      <div class="grid">
+        <div><label>Résultat</label><select id="d_resultat"><option value="">—</option><option>OK</option><option>moyen</option><option>NOK</option></select></div>
+        <div><label>Cause si NOK</label><input id="d_causeNOK" type="text"></div>
+        <div><label>Contrainte moyenne (MPa)</label><input id="d_contrainteMoy" type="number" step="0.01"></div>
+        <div><label>Contrainte minimale (MPa)</label><input id="d_contrainteMin" type="number" step="0.01"></div>
+        <div><label>Écart-type (MPa)</label><input id="d_ecartType" type="number" step="0.001"></div>
+        <div></div>
+      </div>
+      <label style="margin-top:12px">Observations</label>
+      <input id="d_observations" type="text">
+      <button class="btn btn-ok" id="btnDirect" onclick="enregistrerDirect()">Enregistrer dans l'historique</button>
+      <div id="directMsg"></div>
     </div>
   </div>
 
@@ -292,20 +364,70 @@ let lastReco = null;
 
 // initialise la date/heure courante (modifiable) au format datetime-local
 function initDateHeure(){
-  const el=document.getElementById('dateHeure');
-  if(!el) return;
   const d=new Date();
   d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
-  el.value=d.toISOString().slice(0,16);
+  const iso=d.toISOString().slice(0,16);
+  const a=document.getElementById('dateHeure'); if(a) a.value=iso;
+  const b=document.getElementById('d_dateHeure'); if(b) b.value=iso;
 }
 window.addEventListener('DOMContentLoaded', initDateHeure);
 
+// total grammage pour le mode saisie directe
+function majTotalD(){
+  const {total}=parseComposition(document.getElementById('d_composition').value.trim());
+  document.getElementById('d_epaisseur').value = total||"";
+  const el=document.getElementById('d_totalGram');
+  if(!total){ el.innerHTML=""; return; }
+  el.innerHTML='Grammage total : <b>'+total+' µm</b>'+(total>LIMITE_GRAMMAGE?' ⚠️ > '+LIMITE_GRAMMAGE:'');
+  el.style.color = total>LIMITE_GRAMMAGE ? '#CC2222' : '#2A7A2A';
+}
+
+// enregistrement direct (sans IA)
+async function enregistrerDirect(){
+  const msg=document.getElementById('directMsg'); msg.innerHTML="";
+  const dv=id=>{const e=document.getElementById('d_'+id);return e?e.value.trim():"";};
+  const num=id=>{const v=dv(id);return v===""?null:parseFloat(v);};
+  const {total,couches}=parseComposition(dv('composition'));
+  if(!total||!dv('typeSoudure')){
+    msg.innerHTML='<div class="err">Renseignez au moins le type de soudure et la composition.</div>';return;
+  }
+  const btn=document.getElementById('btnDirect');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Enregistrement…';
+  const body={
+    action:"logDirect",
+    dateHeure:dv('dateHeure'), operateur:dv('operateur'), controleur:dv('controleur'),
+    projet:dv('projet'), matiere:dv('matiere'),
+    epaisseur:total, composition:dv('composition'), couches:couches.join(" + "),
+    fabricant:dv('fabricant'), rouleau:dv('rouleau'), typeSoudure:dv('typeSoudure'), machine:dv('machine'),
+    tAmbiante:dv('tAmbiante'), humidite:dv('humidite'), tPoutreFroide:dv('tPoutreFroide'),
+    params:{
+      tChauffeHaut:num('tChauffeHaut'), tChauffeBas:num('tChauffeBas'),
+      tSoudureHaut:num('tSoudureHaut'), tSoudureBas:num('tSoudureBas'),
+      vitesse:num('vitesse'), pBobineArr:num('pBobineArr'), pRefroid:num('pRefroid'),
+      pSoudure:num('pSoudure'), pChauffe:num('pChauffe'), pBobineAvant:num('pBobineAvant')
+    },
+    resultat:dv('resultat'), causeNOK:dv('causeNOK'),
+    contrainteMoy:dv('contrainteMoy'), contrainteMin:dv('contrainteMin'), ecartType:dv('ecartType'),
+    observations:dv('observations')
+  };
+  try{
+    const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+    const j=await res.json();
+    if(!j.ok) throw new Error(j.error||"erreur");
+    msg.innerHTML='<div class="warn" style="background:#dcf0dc;border-color:#2A7A2A;color:#1c1c1c"><b>✓ Test enregistré</b> (ligne '+j.data.ligne+').</div>';
+  }catch(e){
+    msg.innerHTML='<div class="err">Erreur : '+e.message+'</div>';
+  }finally{
+    btn.disabled=false; btn.textContent="Enregistrer dans l'historique";
+  }
+}
+
 function showTab(t){
   document.getElementById('tab-calc').style.display = t==='calc'?'block':'none';
+  document.getElementById('tab-direct').style.display = t==='direct'?'block':'none';
   document.getElementById('tab-hist').style.display = t==='hist'?'block':'none';
-  document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('active', (t==='calc'&&i===0)||(t==='hist'&&i===1));
-  });
+  const idx = t==='calc'?0 : t==='direct'?1 : 2;
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active', i===idx));
 }
 
 function val(id){ return document.getElementById(id).value.trim(); }
@@ -536,7 +658,9 @@ async function enregistrer(){
     reco:lastReco,
     paramsReels: paramsReels,            // valeurs ajustées par l'opérateur
     resultat:val('resultatReel'),
-    causeNOK:val('causeNOK'), forceRupture:val('forceRupture'), observations:val('observations')
+    causeNOK:val('causeNOK'),
+    contrainteMoy:val('contrainteMoy'), contrainteMin:val('contrainteMin'), ecartType:val('ecartType'),
+    observations:val('observations')
   };
   try{
     const res=await fetch(API_URL,{
