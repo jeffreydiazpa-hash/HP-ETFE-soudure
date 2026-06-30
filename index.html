@@ -856,15 +856,17 @@ async function chargerHistorique(){
     const h=j.data||[];
     if(!h.length){ c.innerHTML='<p class="muted">Aucune soudure enregistrée pour l\'instant.</p>'; return; }
     _histData = h;
-    let html='<table class="src-tbl"><tr><th>Date</th><th>Projet</th><th>Épais.</th><th>Type</th><th>T°amb</th><th>Résultat</th><th></th></tr>';
+    let html='<table class="src-tbl"><tr><th>Date</th><th>Projet</th><th>Épais.</th><th>Type</th><th>T°amb</th><th>Résultat</th><th>ID</th><th></th></tr>';
     h.slice().reverse().forEach((r)=>{
       const realIdx = h.indexOf(r);
       const dt=r['Horodatage']?new Date(r['Horodatage']).toLocaleString('fr-FR'):'—';
       const res=r['Résultat']==='OK'?'<span class="ok-pill">OK</span>':(r['Résultat']||'—');
       const mode = r['Analyse IA'] ? '🤖' : '✍️';  // robot = reco IA, main = saisie directe
+      const id = r['ID'] || '—';
       html+='<tr class="hist-row" onclick="ouvrirDetail('+realIdx+')" style="cursor:pointer">'+
         '<td>'+dt+'</td><td>'+(r['Projet']||'—')+'</td><td>'+(r['Épaisseur totale (µm)']||'')+'</td>'+
         '<td>'+(r['Type soudure']||'')+'</td><td>'+(r['T° ambiante (°C)']||'')+'</td><td>'+res+'</td>'+
+        '<td style="font-family:DM Mono,monospace;font-size:11px;color:#7A7A7A">'+id+'</td>'+
         '<td>'+mode+' ›</td></tr>';
     });
     html+='</table><p class="muted" style="font-size:11px;margin-top:8px">🤖 recommandation IA · ✍️ saisie directe</p>';
@@ -882,6 +884,9 @@ function ouvrirDetail(idx){
     alert("Cette ligne n'a pas d'ID (enregistrée avant l'ajout des identifiants). Modification impossible — elle restera visible en lecture.");
   }
   let html='<div class="detail-grid">';
+  // ID en tête (lecture seule, pleine largeur)
+  html+='<div class="detail-item full"><div class="detail-k">Identifiant du test</div>'+
+    '<div class="detail-ro" style="font-family:DM Mono,monospace">'+(window._editId||'(aucun — ligne non modifiable)')+'</div></div>';
   CHAMPS_EDIT.forEach(([key,label,type])=>{
     const val = r[key]!=null ? r[key] : "";
     if(type==='readonly' || type==='readonly-long'){
