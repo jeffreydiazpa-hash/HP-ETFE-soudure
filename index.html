@@ -227,10 +227,6 @@
           <label>Humidité (%)</label>
           <input id="humidite" type="number" inputmode="numeric" placeholder="ex. 63">
         </div>
-        <div>
-          <label>T° poutre froide (°C) <span class="opt">(optionnel — thermo IR)</span></label>
-          <input id="tPoutreFroide" type="number" inputmode="numeric" placeholder="laisser vide si non mesuré">
-        </div>
       </div>
       <button class="btn" id="btnCalc" onclick="calculer()">Calculer les paramètres recommandés</button>
       <div id="erreur"></div>
@@ -280,6 +276,10 @@
           <div>
             <label>Cause si NOK <span class="opt">(pelage, bulles, délaminage…)</span></label>
             <input id="causeNOK" type="text">
+          </div>
+          <div>
+            <label>T° poutre froide (°C) <span class="opt">(mesurée pendant la soudure)</span></label>
+            <input id="tPoutreFroide" type="number" inputmode="numeric" placeholder="thermo IR sur la barre">
           </div>
         </div>
 
@@ -352,7 +352,6 @@
         </div>
         <div><label>T° ambiante (°C)</label><input id="d_tAmbiante" type="number"></div>
         <div><label>Humidité (%)</label><input id="d_humidite" type="number"></div>
-        <div><label>T° poutre froide (°C) <span class="opt">(optionnel)</span></label><input id="d_tPoutreFroide" type="number"></div>
       </div>
 
       <h2 style="margin-top:22px">Paramètres de soudure utilisés</h2>
@@ -374,6 +373,7 @@
       <div class="grid">
         <div><label>Résultat</label><select id="d_resultat"><option value="">—</option><option>OK</option><option>moyen</option><option>NOK</option></select></div>
         <div><label>Cause si NOK</label><input id="d_causeNOK" type="text"></div>
+        <div><label>T° poutre froide (°C) <span class="opt">(mesurée pendant la soudure)</span></label><input id="d_tPoutreFroide" type="number"></div>
       </div>
 
       <div class="traction-box">
@@ -567,7 +567,7 @@ async function calculer(){
     depasseLimite: total>LIMITE_GRAMMAGE,
     fabricant:val('fabricant'), rouleau:val('rouleau'), machine:val('machine'),
     operateur:val('operateur'), projet:val('projet'),
-    tAmbiante:val('tAmbiante'), humidite:val('humidite'), tPoutreFroide:val('tPoutreFroide')
+    tAmbiante:val('tAmbiante'), humidite:val('humidite')
   };
 
   try{
