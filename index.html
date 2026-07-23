@@ -619,15 +619,15 @@ function afficher(d){
       '<b style="color:#CC2222">⚠️ Hors fenêtre de fusion ETFE</b><br>'+d.fenetureFusion.alerte+'</div>';
   }
 
-  // bandeau compensation (affiché tant que théorique non validée)
+  // note de contexte : reco basée sur la pratique réelle (plus de compensation théorique)
   const wc=document.getElementById('warnComp'); wc.innerHTML="";
   const comp=d.compensation||{};
-  if(comp.statut==="théorique non validée" && (comp.deltaSoudure||(comp.notes&&comp.notes.length))){
+  if(comp.notes && comp.notes.length){
     let notes=(comp.notes||[]).map(n=>'• '+n).join('<br>');
-    wc.innerHTML='<div class="warn"><b>⚠️ Compensation thermique théorique</b><br>'+
-      'Les ajustements liés à la température de l\'atelier sont basés sur la norme DIN, '+
-      '<b>pas encore validés par vos essais réels</b>. Faites un cordon test avant production et ajustez si besoin. '+
-      'Chaque soudure enregistrée affine ce calcul.<br><br>'+notes+'</div>';
+    wc.innerHTML='<div class="warn" style="background:#eef4fb;border-color:#3A6EA5;border-left-color:#3A6EA5">'+
+      '<b style="color:#2a5a8a">Paramètres basés sur votre pratique réelle</b><br>'+
+      'Les valeurs recommandées sont la médiane de vos soudures réussies pour ce produit. '+
+      'Aucun ajustement théorique n\'est appliqué.<br><br>'+notes+'</div>';
   }
 
   // paramètres ÉDITABLES (l'opérateur a le dernier mot)
