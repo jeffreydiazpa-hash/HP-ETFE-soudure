@@ -90,6 +90,13 @@
   .samples-grid input:focus{outline:none;border-color:var(--rouge)}
   .traction-calc{margin-top:12px;padding:12px;background:#fff;border-radius:8px;font-family:'DM Mono',monospace;font-size:14px;min-height:20px}
   .traction-calc b{color:var(--rouge)}
+  /* Seuil de résistance soudure (norme) */
+  .seuil-ref{background:#eef4fb;border:1px solid #cddcee;border-radius:8px;padding:9px 12px;font-size:12px;color:#2a5a8a;margin-bottom:10px;line-height:1.5}
+  .seuil-ref b{color:#1c3d5e}
+  .eval-traction{margin-top:8px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:500;display:none}
+  .eval-traction.ok{background:#dcf0dc;color:var(--vert);display:block}
+  .eval-traction.moyen{background:#fff3c4;color:#8a6d00;display:block}
+  .eval-traction.nok{background:#fbe0de;color:var(--rouge);display:block}
   /* Vue détail historique */
   .hist-row:hover{background:var(--blanc-casse)}
   .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
@@ -221,7 +228,7 @@
         </div>
         <div>
           <label>T° ambiante atelier (°C)</label>
-          <input id="tAmbiante" type="number" inputmode="numeric" placeholder="ex. 22">
+          <input id="tAmbiante" type="number" inputmode="numeric" placeholder="ex. 22" oninput="evaluerTraction('C')">
         </div>
         <div>
           <label>Humidité (%)</label>
@@ -292,12 +299,19 @@
             </div>
           </div>
 
+          <div class="seuil-ref">
+            <b>Seuil de référence soudure (état de l'art, prCEN/TS 19102) :</b> résistance caractéristique
+            fuw,23 = <b>30 MPa</b> à 23 °C (fractile 5 %, essais EN ISO 527, ≥5 éprouvettes, CoV ≤ 8 %) ·
+            fuw,50 = <b>24 MPa</b> à 50 °C. Film de base sain ≈ 40 MPa. La soudure reste toujours plus faible que le film — c'est normal.
+          </div>
+
           <div id="C_vals" class="traction-pane">
             <div class="grid">
-              <div><label>Contrainte moyenne (MPa)</label><input id="contrainteMoy" type="number" step="0.01"></div>
-              <div><label>Contrainte minimale (MPa)</label><input id="contrainteMin" type="number" step="0.01"></div>
+              <div><label>Contrainte moyenne (MPa)</label><input id="contrainteMoy" type="number" step="0.01" oninput="evaluerTraction('C')"></div>
+              <div><label>Contrainte minimale (MPa)</label><input id="contrainteMin" type="number" step="0.01" oninput="evaluerTraction('C')"></div>
               <div><label>Écart-type (MPa)</label><input id="ecartType" type="number" step="0.001"></div>
             </div>
+            <div id="C_evalManual" class="eval-traction"></div>
           </div>
 
           <div id="C_samples" class="traction-pane" style="display:none">
@@ -311,6 +325,7 @@
               <input type="number" step="0.01" placeholder="Éch. 6 (opt.)" id="C_s6" oninput="calcSamples('C')">
             </div>
             <div id="C_calc" class="traction-calc"></div>
+            <div id="C_eval" class="eval-traction"></div>
           </div>
         </div>
 
@@ -350,7 +365,7 @@
             <option>Overlap</option><option>Kederpocket</option>
           </select>
         </div>
-        <div><label>T° ambiante (°C)</label><input id="d_tAmbiante" type="number"></div>
+        <div><label>T° ambiante (°C)</label><input id="d_tAmbiante" type="number" oninput="evaluerTraction('D')"></div>
         <div><label>Humidité (%)</label><input id="d_humidite" type="number"></div>
       </div>
 
@@ -384,12 +399,20 @@
             <button type="button" class="seg-btn" id="segD_samples" onclick="tractionMode('D','samples')">Saisir les 5 échantillons</button>
           </div>
         </div>
+
+        <div class="seuil-ref">
+          <b>Seuil de référence soudure (état de l'art, prCEN/TS 19102) :</b> résistance caractéristique
+          fuw,23 = <b>30 MPa</b> à 23 °C (fractile 5 %, essais EN ISO 527, ≥5 éprouvettes, CoV ≤ 8 %) ·
+          fuw,50 = <b>24 MPa</b> à 50 °C. Film de base sain ≈ 40 MPa. La soudure reste toujours plus faible que le film — c'est normal.
+        </div>
+
         <div id="D_vals" class="traction-pane">
           <div class="grid">
-            <div><label>Contrainte moyenne (MPa)</label><input id="d_contrainteMoy" type="number" step="0.01"></div>
-            <div><label>Contrainte minimale (MPa)</label><input id="d_contrainteMin" type="number" step="0.01"></div>
+            <div><label>Contrainte moyenne (MPa)</label><input id="d_contrainteMoy" type="number" step="0.01" oninput="evaluerTraction('D')"></div>
+            <div><label>Contrainte minimale (MPa)</label><input id="d_contrainteMin" type="number" step="0.01" oninput="evaluerTraction('D')"></div>
             <div><label>Écart-type (MPa)</label><input id="d_ecartType" type="number" step="0.001"></div>
           </div>
+          <div id="D_evalManual" class="eval-traction"></div>
         </div>
         <div id="D_samples" class="traction-pane" style="display:none">
           <p class="muted" style="margin-bottom:8px">Entrez la contrainte (MPa) de chaque échantillon. Moyenne, min et écart-type sont calculés automatiquement.</p>
@@ -402,6 +425,7 @@
             <input type="number" step="0.01" placeholder="Éch. 6 (opt.)" id="D_s6" oninput="calcSamples('D')">
           </div>
           <div id="D_calc" class="traction-calc"></div>
+          <div id="D_eval" class="eval-traction"></div>
         </div>
       </div>
 
@@ -440,6 +464,13 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbypgjEjWn9nMxFFQIuBDHPVXjND-paV70MLoNf1U0TULfaIzLnR29sGWUnq9hPefVad/exec";
 
 let lastReco = null;
+
+// ---- Seuils de résistance des soudures ETFE (état de l'art, prCEN/TS 19102) ----
+// fuw,23 : résistance caractéristique de la soudure à 23°C (fractile 5%, EN ISO 527, ≥5 éprouvettes, CoV ≤ 8%)
+// fuw,50 : résistance caractéristique de la soudure à 50°C (scénario température élevée / été)
+// Film de base sain ≈ 40 MPa à titre de comparaison — la soudure est toujours le maillon le plus faible.
+const SEUIL_TRACTION_23 = 30; // MPa
+const SEUIL_TRACTION_50 = 24; // MPa
 
 // initialise la date/heure courante (modifiable) au format datetime-local
 function initDateHeure(){
@@ -724,6 +755,7 @@ function tractionMode(prefix, mode){
   document.getElementById(prefix+'_samples').style.display = mode==='samples'?'block':'none';
   document.getElementById('seg'+prefix+'_vals').classList.toggle('active', mode==='vals');
   document.getElementById('seg'+prefix+'_samples').classList.toggle('active', mode==='samples');
+  evaluerTraction(prefix);
 }
 
 // calcule moyenne, min, écart-type à partir des échantillons saisis
@@ -745,6 +777,42 @@ function calcSamples(prefix){
     'Min <b>'+min.toFixed(2)+'</b> MPa · Écart-type <b>'+sd.toFixed(3)+'</b> MPa';
   // stocke pour récupération à l'enregistrement
   out.dataset.moy=moy.toFixed(2); out.dataset.min=min.toFixed(2); out.dataset.sd=sd.toFixed(3);
+  evaluerTraction(prefix);
+}
+
+// Compare la contrainte mesurée au seuil de référence norme (prCEN/TS 19102)
+// et affiche un message OK / à surveiller / NOK dans la zone d'évaluation adaptée au mode actif.
+// Choisit le seuil 23°C (30 MPa) ou 50°C (24 MPa) selon la T° ambiante atelier renseignée
+// (>=35°C => on se rapproche du scénario "température élevée" et on applique le seuil le plus exigeant relatif).
+function evaluerTraction(prefix){
+  const t = lireTraction(prefix);
+  const moy = parseFloat(t.moy), min = parseFloat(t.min);
+  const samplesVisible = document.getElementById(prefix+'_samples').style.display!=='none';
+  const targetId = samplesVisible ? prefix+'_eval' : prefix+'_evalManual';
+  const target = document.getElementById(targetId);
+  if(!target) return;
+  if(isNaN(moy)){ target.className='eval-traction'; target.innerHTML=''; return; }
+
+  const tAmbId = prefix==='C' ? 'tAmbiante' : 'd_tAmbiante';
+  const tAmbEl = document.getElementById(tAmbId);
+  const tAmb = tAmbEl ? parseFloat(tAmbEl.value) : NaN;
+  const useSeuil50 = !isNaN(tAmb) && tAmb>=35;
+  const seuil = useSeuil50 ? SEUIL_TRACTION_50 : SEUIL_TRACTION_23;
+  const refLabel = useSeuil50 ? 'fuw,50 = 24 MPa (50°C)' : 'fuw,23 = 30 MPa (23°C)';
+
+  let cls, msg;
+  if(moy < seuil){
+    cls='nok';
+    msg='✗ NOK — Moyenne '+moy.toFixed(2)+' MPa < seuil '+seuil+' MPa ('+refLabel+', prCEN/TS 19102). Soudure non conforme : revoir les paramètres machine avant de poursuivre.';
+  } else if(!isNaN(min) && min < seuil){
+    cls='moyen';
+    msg='⚠ À surveiller — Moyenne '+moy.toFixed(2)+' MPa ≥ seuil '+seuil+' MPa, mais le minimum ('+min.toFixed(2)+' MPa) passe en dessous. Dispersion trop importante : vérifier la régularité du procédé (CoV attendu ≤ 8 %).';
+  } else {
+    cls='ok';
+    msg='✓ Conforme — Moyenne '+moy.toFixed(2)+' MPa ≥ seuil '+seuil+' MPa ('+refLabel+', prCEN/TS 19102).';
+  }
+  target.className='eval-traction '+cls;
+  target.innerHTML=msg;
 }
 
 // renvoie les 3 valeurs de traction selon le mode actif (prefix C ou D)
